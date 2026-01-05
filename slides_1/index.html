@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GordonWood - 作品集</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* 艺术字Logo */
+        .logo {
+            position: fixed;
+            top: 40px;
+            left: 50px;
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #0099ff, #00ffaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+            }
+            to {
+                filter: drop-shadow(0 0 25px rgba(0, 255, 170, 0.8));
+            }
+        }
+
+        /* 中心目录容器 */
+        .catalog-container {
+            max-width: 800px;
+            width: 90%;
+            padding: 60px 80px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .catalog-title {
+            text-align: center;
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 50px;
+            background: linear-gradient(45deg, #ffffff, #aaccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .catalog-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .catalog-item {
+            position: relative;
+            padding: 25px 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 2px solid rgba(0, 170, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .catalog-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .catalog-item:hover::before {
+            left: 100%;
+        }
+
+        .catalog-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00d4ff;
+            transform: translateX(10px);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .catalog-item a {
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .catalog-item-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .catalog-item-desc {
+            font-size: 14px;
+            color: #aaccff;
+            margin-top: 8px;
+        }
+
+        .catalog-arrow {
+            font-size: 28px;
+            color: #00d4ff;
+            transition: transform 0.3s ease;
+        }
+
+        .catalog-item:hover .catalog-arrow {
+            transform: translateX(5px);
+        }
+
+        /* 装饰性背景动画 */
+        .bg-decoration {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-decoration:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .bg-decoration:nth-child(2) {
+            bottom: 15%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(30px, -30px) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 返回索引按钮 -->
+<a href="../index.html" style="position:fixed;top:28px;right:32px;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.35);color:#e9f0ff;text-decoration:none;font-weight:700;backdrop-filter:blur(10px);z-index:10;">← 返回索引</a>
+
+<!-- 装饰性背景 -->
+<div class="bg-decoration"></div>
+<div class="bg-decoration"></div>
+
+<!-- 左上角Logo -->
+<div class="logo">GordonWood</div>
+
+<!-- 中心目录 -->
+<div class="catalog-container">
+    <h1 class="catalog-title">作品目录</h1>
+    <ul class="catalog-list">
+        <li class="catalog-item">
+            <a href="championship.html">
+                <div>
+                    <div class="catalog-item-title">小挑战杯选题推荐</div>
+                    <div class="catalog-item-desc">OJ与AI结合 + 云端HTML演示文稿</div>
+                </div>
+                <span class="catalog-arrow">→</span>
+            </a>
+        </li>
+        <!-- 未来可在此添加更多项目 -->
+        <!--
+        <li class="catalog-item">
+            <a href="project2.html">
+                <div>
+                    <div class="catalog-item-title">项目标题</div>
+                    <div class="catalog-item-desc">项目简介</div>
+                </div>
+                <span class="catalog-arrow">→</span>
+            </a>
+        </li>
+        -->
+    </ul>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web 索引</title>
+  <style>
+    :root {
+      --bg: #0c101a;
+      --card: #111829;
+      --card-2: #0f1524;
+      --text: #e8ecf2;
+      --muted: #9aa6c1;
+      --accent: #35e0c2;
+      --accent-2: #8b7bff;
+      --border: rgba(255, 255, 255, 0.08);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 18% 20%, rgba(53, 224, 194, 0.09), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(139, 123, 255, 0.12), transparent 35%),
+                  var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Microsoft YaHei', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 28px 20px 48px;
+    }
+    .page { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    h1 { margin: 0; font-size: 28px; letter-spacing: 0.2px; }
+    p { margin: 0; color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow);
+      transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(53, 224, 194, 0.5);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+    }
+    .card h3 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    .chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      width: fit-content;
+    }
+    .chip.accent { border-color: rgba(53, 224, 194, 0.5); color: #bff7ec; }
+    .desc { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(53, 224, 194, 0.1);
+      color: #c5fff2;
+      font-size: 12px;
+      border: 1px solid rgba(53, 224, 194, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Web 目录索引</h1>
+        <p>快速跳转到各子项目；视觉维持深色渐变风格。</p>
+      </div>
+      <div class="chip accent">共 7 个入口</div>
+    </header>
+
+    <div class="grid">
+      <a class="card" href="./fenggwsx/fenggwsx.html">
+        <h3>FENGGWSX</h3>
+        <div class="desc">渐变脉动标题页面，Klein Blue 背景。</div>
+        <div class="links"><span class="pill">进入</span></div>
+      </a>
+
+      <a class="card" href="./slides_1/index.html">
+        <h3>Slides 1 · 作品目录</h3>
+        <div class="desc">霓虹渐变目录页，含小挑战杯选题等链接。</div>
+        <div class="links"><span class="pill">进入</span><span class="pill">深色</span></div>
+      </a>
+
+      <a class="card" href="./slides_2/index.html">
+        <h3>Slides 2 · 大语言模型</h3>
+        <div class="desc">课程演示文稿，多页幻灯片导航。</div>
+        <div class="links"><span class="pill">进入</span><span class="pill">浅色</span></div>
+      </a>
+
+      <a class="card" href="./slides_3/index.html">
+        <h3>Slides 3 · HTML 思政演讲</h3>
+        <div class="desc">PPT 转 HTML 演示幻灯，含目录、炫酷动画与课堂案例。</div>
+        <div class="links"><span class="pill">进入</span><span class="pill">深色</span><span class="pill">演示</span></div>
+      </a>
+
+      <a class="card" href="./study/index.html">
+        <h3>课程表工具</h3>
+        <div class="desc">可编辑课程表，支持导入导出与时间自定义。</div>
+        <div class="links"><span class="pill">进入</span></div>
+      </a>
+
+      <a class="card" href="./todolist/index.html">
+        <h3>TodoList Manager</h3>
+        <div class="desc">任务管理器，支持优先级与 JSON 导入导出。</div>
+        <div class="links"><span class="pill">进入</span></div>
+      </a>
+
+      <a class="card" href="./courseSelection/index.html">
+        <h3>意愿值选课 · 投豆器</h3>
+        <div class="desc">启发式分豆策略，深色界面。</div>
+        <div class="links"><span class="pill">进入</span><span class="pill">新</span></div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

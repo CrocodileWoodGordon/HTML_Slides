@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>意愿值选课投豆子策略器</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --panel: #111828;
+      --panel-2: #161f32;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #24e0c5;
+      --accent-2: #9b7bff;
+      --danger: #f87171;
+      --shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(36, 224, 197, 0.08), transparent 30%),
+                  radial-gradient(circle at 80% 0%, rgba(155, 123, 255, 0.1), transparent 30%),
+                  var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 32px;
+    }
+    h1, h2, h3, p { margin: 0; }
+    a { color: var(--accent); }
+    .page {
+      max-width: 1180px;
+      margin: 0 auto 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .title {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .title h1 {
+      font-size: 30px;
+      letter-spacing: 0.3px;
+    }
+    .title p { color: var(--muted); }
+    .badge {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, rgba(36, 224, 197, 0.2), rgba(155, 123, 255, 0.2));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.2s ease, background 0.2s ease;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--shadow);
+    }
+    button:active { transform: translateY(1px) scale(0.99); }
+    button.secondary {
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: none;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .course-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .course-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+    .course-name {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+    }
+    .teacher-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .teacher-row {
+      display: grid;
+      grid-template-columns: 1.2fr repeat(3, 0.6fr) auto;
+      gap: 8px;
+      background: var(--panel-2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px;
+      align-items: center;
+    }
+    .teacher-row input,
+    .teacher-row select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .result-panel {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      align-items: start;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .results-table th,
+    .results-table td {
+      padding: 10px 8px;
+      text-align: left;
+    }
+    .results-table th {
+      color: var(--muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .results-table tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(36, 224, 197, 0.1);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .pill.danger { background: rgba(248, 113, 113, 0.1); color: #fecdd3; border-color: rgba(248, 113, 113, 0.25); }
+    .pill.neutral { background: rgba(255, 255, 255, 0.05); color: var(--muted); }
+    .summary-box {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .stat {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat .label { margin-bottom: 4px; display: block; }
+    .stat-value { font-size: 18px; font-weight: 700; }
+    .warning { color: var(--danger); font-weight: 600; }
+    @media (max-width: 980px) {
+      body { padding: 18px; }
+      .header { grid-template-columns: 1fr; }
+      .result-panel { grid-template-columns: 1fr; }
+      .teacher-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="title">
+        <h1>意愿值选课 · 投豆子策略器</h1>
+        <p>总豆子 100。根据当前人数 / 上限 估算热门程度，用启发式算法给出推荐投入与成功概率。</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a href="../index.html" style="text-decoration:none;color:var(--text);font-weight:700;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:9px 12px;background:var(--panel-2);box-shadow:var(--shadow);">← 返回索引</a>
+        <div class="badge">Dark Mode · Heuristic</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="addCourse">+ 添加课程</button>
+      <button class="secondary" id="calc">计算最佳策略</button>
+    </div>
+
+    <div id="courses"></div>
+
+    <div class="result-panel">
+      <div class="card">
+        <div class="course-head" style="margin-bottom:8px;">
+          <h3>推荐投豆方案</h3>
+          <span class="pill">动态贪心 · 估算概率</span>
+        </div>
+        <table class="results-table" id="resultTable">
+          <thead>
+            <tr>
+              <th>课程</th>
+              <th>老师</th>
+              <th>意愿</th>
+              <th>建议豆子</th>
+              <th>预估成功率</th>
+              <th>提示</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="summary-box">
+        <div class="mini-grid">
+          <div class="stat">
+            <span class="label">豆子总额</span>
+            <div class="stat-value" id="totalBeans">100</div>
+          </div>
+          <div class="stat">
+            <span class="label">剩余豆子</span>
+            <div class="stat-value" id="remainingBeans">100</div>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="label">高优先级状态</span>
+          <div id="mustHaveStatus" class="stat-value">等待计算</div>
+        </div>
+        <div class="stat">
+          <span class="label">提醒</span>
+          <div id="note" class="stat-value" style="font-size:14px; line-height:1.4; color:var(--muted);">点击“计算最佳策略”获取建议。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_BEANS = 100;
+    const coursesEl = document.getElementById('courses');
+    const addCourseBtn = document.getElementById('addCourse');
+    const calcBtn = document.getElementById('calc');
+    const resultTable = document.getElementById('resultTable').querySelector('tbody');
+    const remainingBeansEl = document.getElementById('remainingBeans');
+    const mustHaveStatusEl = document.getElementById('mustHaveStatus');
+    const noteEl = document.getElementById('note');
+
+    const uid = () => Math.random().toString(36).slice(2, 9);
+
+    const state = {
+      courses: []
+    };
+
+    function addCourse() {
+      const id = uid();
+      state.courses.push({
+        id,
+        name: `课程 ${state.courses.length + 1}`,
+        teachers: [createTeacher()]
+      });
+      render();
+    }
+
+    function createTeacher() {
+      return {
+        id: uid(),
+        name: '老师',
+        capacity: 30,
+        current: 20,
+        weight: 5
+      };
+    }
+
+    function updateCourseName(id, value) {
+      const course = state.courses.find(c => c.id === id);
+      if (course) course.name = value || '未命名课程';
+    }
+
+    function updateTeacher(courseId, teacherId, key, value) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      const t = course.teachers.find(x => x.id === teacherId);
+      if (!t) return;
+      if (key === 'weight') {
+        t[key] = Number(value);
+      } else {
+        const num = Math.max(0, Number(value) || 0);
+        t[key] = num;
+      }
+    }
+
+    function removeCourse(id) {
+      state.courses = state.courses.filter(c => c.id !== id);
+      render();
+    }
+
+    function addTeacher(courseId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      course.teachers.push(createTeacher());
+      render();
+    }
+
+    function removeTeacher(courseId, teacherId) {
+      const course = state.courses.find(c => c.id === courseId);
+      if (!course) return;
+      course.teachers = course.teachers.filter(t => t.id !== teacherId);
+      if (course.teachers.length === 0) course.teachers.push(createTeacher());
+      render();
+    }
+
+    function render() {
+      coursesEl.innerHTML = '';
+      state.courses.forEach(course => {
+        const card = document.createElement('div');
+        card.className = 'card course-card';
+
+        const head = document.createElement('div');
+        head.className = 'course-head';
+        const nameInput = document.createElement('input');
+        nameInput.className = 'course-name';
+        nameInput.value = course.name;
+        nameInput.placeholder = '课程名称';
+        nameInput.addEventListener('input', e => updateCourseName(course.id, e.target.value));
+
+        const headControls = document.createElement('div');
+        headControls.style.display = 'flex';
+        headControls.style.gap = '8px';
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '删除课程';
+        removeBtn.className = 'secondary';
+        removeBtn.onclick = () => removeCourse(course.id);
+        headControls.appendChild(removeBtn);
+
+        head.appendChild(nameInput);
+        head.appendChild(headControls);
+
+        const teacherList = document.createElement('div');
+        teacherList.className = 'teacher-list';
+
+        course.teachers.forEach(t => {
+          const row = document.createElement('div');
+          row.className = 'teacher-row';
+
+          const name = document.createElement('input');
+          name.value = t.name;
+          name.placeholder = '老师姓名';
+          name.addEventListener('input', e => updateTeacher(course.id, t.id, 'name', e.target.value));
+
+          const cap = document.createElement('input');
+          cap.type = 'number';
+          cap.min = '0';
+          cap.value = t.capacity;
+          cap.placeholder = '人数上限';
+          cap.addEventListener('input', e => updateTeacher(course.id, t.id, 'capacity', e.target.value));
+
+          const cur = document.createElement('input');
+          cur.type = 'number';
+          cur.min = '0';
+          cur.value = t.current;
+          cur.placeholder = '当前人数';
+          cur.addEventListener('input', e => updateTeacher(course.id, t.id, 'current', e.target.value));
+
+          const weight = document.createElement('select');
+          for (let i = 0; i <= 10; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            weight.appendChild(opt);
+          }
+          weight.value = t.weight;
+          weight.addEventListener('change', e => updateTeacher(course.id, t.id, 'weight', e.target.value));
+
+          const remove = document.createElement('button');
+          remove.textContent = '删除';
+          remove.className = 'secondary';
+          remove.onclick = () => removeTeacher(course.id, t.id);
+
+          row.append(name, cap, cur, weight, remove);
+          teacherList.appendChild(row);
+        });
+
+        const addTeacherBtn = document.createElement('button');
+        addTeacherBtn.textContent = '+ 添加老师';
+        addTeacherBtn.className = 'secondary';
+        addTeacherBtn.onclick = () => addTeacher(course.id);
+
+        card.append(head, teacherList, addTeacherBtn);
+        coursesEl.appendChild(card);
+      });
+    }
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+    function ratio(t) {
+      if (t.capacity <= 0) return 999;
+      return t.current / t.capacity;
+    }
+
+    function estimatedCost(t) {
+      const r = ratio(t);
+      const buffer = t.weight === 10 ? 6 : 2;
+      if (r <= 1) return t.weight === 10 ? 5 : 0;
+      const growth = (r - 1) * 50 + buffer + Math.pow(r - 1, 1.35) * 8;
+      return clamp(Math.round(growth), 0, 100);
+    }
+
+    function successProb(beans, t) {
+      const need = Math.max(5, estimatedCost(t));
+      const k = need / 1.5 + 2; // controls slope
+      const base = ratio(t) <= 1 ? 0.2 : 0.05;
+      const p = 1 - Math.exp(-(beans + base) / k);
+      return clamp(p, 0, 1);
+    }
+
+    function computeStrategy() {
+      const allocations = new Map();
+      let beansLeft = TOTAL_BEANS;
+      let mustHaveOk = true;
+
+      // Must-have first
+      state.courses.forEach(course => {
+        course.teachers.forEach(t => {
+          const key = `${course.id}-${t.id}`;
+          allocations.set(key, { beans: 0, prob: 0, drop: false, course, teacher: t });
+          if (t.weight === 10) {
+            const need = estimatedCost(t);
+            const alloc = Math.min(need, beansLeft);
+            allocations.get(key).beans = alloc;
+            beansLeft -= alloc;
+          }
+        });
+      });
+
+      if (beansLeft < 0) {
+        mustHaveOk = false;
+      }
+
+      // Greedy for weights 1-9
+      const teachersFlat = [];
+      state.courses.forEach(course => {
+        course.teachers.forEach(t => {
+          teachersFlat.push({ course, teacher: t, key: `${course.id}-${t.id}` });
+        });
+      });
+
+      while (beansLeft > 0) {
+        let best = null;
+        let bestScore = 0.0001;
+        for (const item of teachersFlat) {
+          const { teacher: t, key } = item;
+          if (t.weight <= 0) continue;
+          const alloc = allocations.get(key).beans || 0;
+          const delta = successProb(alloc + 1, t) - successProb(alloc, t);
+          const score = delta * t.weight;
+          if (score > bestScore) {
+            bestScore = score;
+            best = item;
+          }
+        }
+        if (!best) break;
+        allocations.get(best.key).beans += 1;
+        beansLeft -= 1;
+      }
+
+      // Final probabilities and drop hints
+      allocations.forEach(entry => {
+        const { teacher: t } = entry;
+        entry.prob = successProb(entry.beans, t);
+        if (t.weight <= 2 && ratio(t) > 2.5 && entry.beans === 0) {
+          entry.drop = true;
+        }
+      });
+
+      renderResult(allocations, beansLeft, mustHaveOk);
+    }
+
+    function renderResult(allocations, beansLeft, mustHaveOk) {
+      const rows = [];
+      allocations.forEach(({ beans, prob, drop, course, teacher }) => {
+        rows.push({
+          courseName: course.name,
+          teacherName: teacher.name,
+          weight: teacher.weight,
+          beans,
+          prob,
+          drop,
+          hot: ratio(teacher)
+        });
+      });
+
+      rows.sort((a, b) => b.beans - a.beans || b.weight - a.weight);
+
+      resultTable.innerHTML = rows.map(r => {
+        const probPct = (r.prob * 100).toFixed(1) + '%';
+        let tip = '';
+        if (r.weight === 10) tip = '<span class="pill">必须上</span>';
+        else if (r.drop) tip = '<span class="pill danger">建议放弃</span>';
+        else tip = '<span class="pill neutral">可博弈</span>';
+        return `<tr>
+          <td>${r.courseName}</td>
+          <td>${r.teacherName}</td>
+          <td>${r.weight}</td>
+          <td>${r.beans}</td>
+          <td>${probPct}</td>
+          <td>${tip}</td>
+        </tr>`;
+      }).join('');
+
+      remainingBeansEl.textContent = beansLeft;
+      mustHaveStatusEl.textContent = mustHaveOk ? '已满足所有必须上的课程保底' : '必须上的课超出 100 豆，请调整';
+      mustHaveStatusEl.className = mustHaveOk ? 'stat-value' : 'stat-value warning';
+
+      const used = TOTAL_BEANS - beansLeft;
+      const warning = beansLeft < 0 ? '必须上的课太多，100 豆不够，请降低要求。'
+        : beansLeft === TOTAL_BEANS ? '尚未分配豆子，检查意愿值设置。'
+        : '可微调某些热门课程的投入以稳妥。';
+      noteEl.textContent = warning + ` 已用 ${used}，剩余 ${beansLeft}.`;
+    }
+
+    addCourseBtn.addEventListener('click', addCourse);
+    calcBtn.addEventListener('click', computeStrategy);
+
+    // seed two sample courses
+    addCourse();
+    addCourse();
+  </script>
+</body>
+</html>

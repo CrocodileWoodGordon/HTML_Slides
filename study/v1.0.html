@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>课程表</title>
+	<style>
+		:root {
+			--bg: #0f1118;
+			--fg: #f5f7fb;
+			--muted: #9ba4b5;
+			--grid: #1e2230;
+			--border: #2b3040;
+			--accent: #4ec6ff;
+			--accent2: #7c5dff;
+			--danger: #ff6b6b;
+		}
+		html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: "Inter", "Microsoft YaHei", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+		.page { max-width: 1200px; margin: 0 auto; padding: 20px; }
+		h1 { margin: 0 0 16px; font-size: 22px; }
+		.grid { display: grid; grid-template-columns: 120px repeat(7, 1fr); border: 1px solid var(--border); background: var(--grid); border-radius: 12px; overflow: hidden; }
+		.cell { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 4px; min-height: 50px; position: relative; overflow: visible; }
+		.cell:last-child { border-right: none; }
+		.header { background: #151a26; font-weight: 700; text-align: center; }
+		.time-col { background: #151a26; font-weight: 600; color: var(--muted); text-align: center; cursor: pointer; user-select: none; }
+		.time-col:hover { background: #1a1f2e; }
+		.time-col.editing { background: #0f121c; }
+		.time-edit-input { width: 100%; background: #0f121c; color: var(--fg); border: 1px solid var(--accent); border-radius: 4px; padding: 4px; text-align: center; font-size: 12px; font-family: inherit; }
+		.course { border-radius: 8px; padding: 4px 6px; font-weight: 700; line-height: 1.2; min-height: 40px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); display: flex; align-items: center; color: #000; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; }
+		.empty { color: var(--muted); font-size: 12px; text-align: center; padding: 8px 0; }
+		.selected { outline: 2px dashed var(--accent); outline-offset: -4px; }
+		.no-border { border-top: none !important; }
+		.form { margin-top: 20px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #151a26; display: grid; gap: 12px; }
+		.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+		label { color: var(--muted); font-size: 14px; }
+		input[type="text"], select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: #0f121c; color: var(--fg); min-width: 180px; }
+		button { padding: 9px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-weight: 600; color: #0c1020; }
+		.btn-primary { background: var(--accent); border-color: var(--accent); }
+		.btn-secondary { background: #30384b; color: var(--fg); border-color: #3a4254; }
+		.btn-danger { background: var(--danger); border-color: var(--danger); color: #0c0c0c; }
+		.hint { color: var(--muted); font-size: 13px; }
+	</style>
+</head>
+<body>
+	<div class="page">
+		<h1>课程表</h1>
+		<div id="timetable" class="grid"></div>
+
+		<div class="form">
+			<div class="row">
+				<label for="daySelect">星期</label>
+				<select id="daySelect">
+					<option value="1">星期一</option>
+					<option value="2">星期二</option>
+					<option value="3">星期三</option>
+					<option value="4">星期四</option>
+					<option value="5">星期五</option>
+					<option value="6">星期六</option>
+					<option value="7">星期日</option>
+				</select>
+
+				<label for="startSlot">起始节次</label>
+				<select id="startSlot"></select>
+
+				<label for="endSlot">结束节次</label>
+				<select id="endSlot"></select>
+			</div>
+			<div class="row">
+				<label for="infoInput">课程信息</label>
+				<input type="text" id="infoInput" placeholder="例如：数学分析I (教学班代码... 教室 老师 时间)" style="flex:1; min-width:280px;" />
+			</div>
+			<div class="row">
+				<button class="btn-primary" id="applyBtn">添加/更新</button>
+				<button class="btn-danger" id="deleteBtn">删除选中</button>
+				<button class="btn-secondary" id="clearBtn">清空全部</button>
+				<button class="btn-secondary" id="restoreBtn">恢复时间</button>
+				<span class="hint">提示：按住 Ctrl 可多选网格；"起始/结束节次"也可直接选择范围填入。连续相同课程将自动隐藏分割线。点击左侧时间可编辑。</span>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const days = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日'];
+		const defaultSlots = [
+			{ id: 1, label: '第1节\n8:00-8:45' },
+			{ id: 2, label: '第2节\n8:50-9:35' },
+			{ id: 3, label: '第3节\n9:50-10:35' },
+			{ id: 4, label: '第4节\n10:40-11:25' },
+			{ id: 5, label: '第5节\n11:30-12:15' },
+			{ id: 6, label: '第6节\n13:00-13:45' },
+			{ id: 7, label: '第7节\n13:50-14:35' },
+			{ id: 8, label: '第8节\n14:50-15:35' },
+			{ id: 9, label: '第9节\n15:40-16:25' },
+			{ id:10, label: '第10节\n16:30-17:15' },
+			{ id:11, label: '第11节\n18:00-18:45' },
+			{ id:12, label: '第12节\n18:50-19:35' },
+			{ id:13, label: '第13节\n19:40-20:25' },
+			{ id:14, label: '第14节\n20:30-21:15' },
+		];
+		let slots = JSON.parse(JSON.stringify(defaultSlots));
+		let editingTimeCell = null;
+
+		const tableEl = document.getElementById('timetable');
+		const daySelect = document.getElementById('daySelect');
+		const startSlot = document.getElementById('startSlot');
+		const endSlot = document.getElementById('endSlot');
+		const infoInput = document.getElementById('infoInput');
+		const applyBtn = document.getElementById('applyBtn');
+		const deleteBtn = document.getElementById('deleteBtn');
+		const clearBtn = document.getElementById('clearBtn');
+
+		const selected = new Set(); // keys: day-slot
+		let data = {}; // { "day-slot": { text, day, slot } }
+		const colorMap = {}; // course name -> color
+		const colors = [
+			'linear-gradient(135deg, #4ec6ff, #7c5dff)',
+			'linear-gradient(135deg, #ff6b9d, #c06c84)',
+			'linear-gradient(135deg, #6bcf7f, #4fa975)',
+			'linear-gradient(135deg, #ffd93d, #f0a500)',
+			'linear-gradient(135deg, #ff9a76, #ff6b6b)',
+			'linear-gradient(135deg, #a8edea, #fed6e3)',
+			'linear-gradient(135deg, #74b9ff, #a29bfe)',
+			'linear-gradient(135deg, #55efc4, #38ada9)',
+			'linear-gradient(135deg, #fab1a0, #e17055)',
+			'linear-gradient(135deg, #dfe6e9, #74b9ff)',
+			'linear-gradient(135deg, #f8b739, #e74c3c)',
+			'linear-gradient(135deg, #00d2d3, #0097a7)',
+			'linear-gradient(135deg, #667eea, #764ba2)',
+			'linear-gradient(135deg, #f093fb, #f5576c)',
+			'linear-gradient(135deg, #4facfe, #00f2fe)',
+			'linear-gradient(135deg, #43e97b, #38f9d7)',
+			'linear-gradient(135deg, #fa709a, #fee140)',
+			'linear-gradient(135deg, #30cfd0, #330867)',
+			'linear-gradient(135deg, #a8edea, #fed6e3)',
+			'linear-gradient(135deg, #ff9a56, #ff6a88)',
+			'linear-gradient(135deg, #6dd5ed, #2193b0)',
+			'linear-gradient(135deg, #c471f5, #fa71cd)',
+		];
+		let colorIndex = 0;
+
+		function getCourseColor(courseName) {
+			if (!colorMap[courseName]) {
+				colorMap[courseName] = colors[colorIndex % colors.length];
+				colorIndex++;
+			}
+			return colorMap[courseName];
+		}
+
+		function initSelects() {
+			slots.forEach(s => {
+				const o1 = document.createElement('option'); o1.value = s.id; o1.textContent = `第${s.id}节`;
+				const o2 = o1.cloneNode(true);
+				startSlot.appendChild(o1); endSlot.appendChild(o2);
+			});
+		}
+
+		function key(day, slot) { return `${day}-${slot}`; }
+
+		function renderGrid() {
+			tableEl.innerHTML = '';
+			// header row
+			tableEl.appendChild(makeCell('时间/星期', 'header time-col'));
+			days.forEach(d => tableEl.appendChild(makeCell(d, 'header')));
+			// rows
+			slots.forEach((s, rowIdx) => {
+				const timeCell = makeCell(s.label, 'time-col');
+				timeCell.dataset.slotId = s.id;
+				timeCell.addEventListener('click', () => editTimeSlot(timeCell, s));
+				tableEl.appendChild(timeCell);
+				days.forEach((d, dayIdx) => {
+					const k = key(dayIdx+1, s.id);
+					const cell = document.createElement('div');
+					cell.className = 'cell';
+					cell.dataset.day = dayIdx+1;
+					cell.dataset.slot = s.id;
+					cell.addEventListener('click', (e) => {
+						if (e.ctrlKey || e.metaKey) {
+							toggleSelect(k, cell);
+						} else {
+							clearSelection();
+							toggleSelect(k, cell);
+						}
+						updateFormFromSelection(dayIdx+1, s.id);
+					});
+					const item = data[k];
+					const prevKey = key(dayIdx+1, s.id-1);
+					const prevItem = data[prevKey];
+					
+					// Check if this is continuation of previous course
+					const isContinuation = item && prevItem && item.text === prevItem.text;
+					
+					if (item) {
+						if (isContinuation) {
+							// This is a continuation, hide border and don't show content
+							cell.style.borderTop = 'none';
+							cell.innerHTML = '';
+						} else {
+							// This is the start of a course block, calculate span height
+							let spanCount = 1;
+							let nextSlot = s.id + 1;
+							while (nextSlot <= 14) {
+								const nextKey = key(dayIdx+1, nextSlot);
+								const nextItem = data[nextKey];
+								if (nextItem && nextItem.text === item.text) {
+									spanCount++;
+									nextSlot++;
+								} else {
+									break;
+								}
+							}
+							
+							cell.innerHTML = '';
+							const div = document.createElement('div');
+							div.className = 'course';
+							div.textContent = item.text;
+							div.style.background = getCourseColor(item.text);
+							
+							// Make the course block span multiple cells visually
+							if (spanCount > 1) {
+								// Calculate total height: each cell is 58px (50 min-height + 8 padding)
+								// The block needs to extend down by (spanCount-1) cells
+								const extendHeight = (spanCount - 1) * 58;
+								div.style.bottom = `${-extendHeight}px`;
+							}
+							
+							cell.appendChild(div);
+						}
+					} else {
+						cell.innerHTML = '<div class="empty">空</div>';
+					}
+					if (selected.has(k)) cell.classList.add('selected');
+					tableEl.appendChild(cell);
+				});
+			});
+		}
+
+		function makeCell(text, cls='') {
+			const div = document.createElement('div');
+			div.className = 'cell ' + cls;
+			div.textContent = text;
+			return div;
+		}
+
+		function toggleSelect(k, cell) {
+			if (selected.has(k)) {
+				selected.delete(k);
+				cell.classList.remove('selected');
+			} else {
+				selected.add(k);
+				cell.classList.add('selected');
+			}
+		}
+
+		function clearSelection() {
+			selected.clear();
+			document.querySelectorAll('.cell.selected').forEach(c => c.classList.remove('selected'));
+		}
+
+		function addOrUpdate() {
+			const day = parseInt(daySelect.value, 10);
+			const start = parseInt(startSlot.value, 10);
+			const end = parseInt(endSlot.value, 10);
+			if (!infoInput.value.trim()) { alert('请输入课程信息'); return; }
+			if (end < start) { alert('结束节次不能早于起始节次'); return; }
+			
+			// Check for conflicts
+			const conflicts = [];
+			for (let s=start; s<=end; s++) {
+				const k = key(day, s);
+				if (data[k]) conflicts.push(s);
+			}
+			
+			if (conflicts.length > 0) {
+				showConflictDialog(conflicts, () => {
+					// 覆盖：清空范围内所有课程，添加新课程
+					for (let s=start; s<=end; s++) {
+						const k = key(day, s);
+						data[k] = { text: infoInput.value.trim(), day, slot: s };
+					}
+					save();
+					renderGrid();
+				}, () => {
+					// 跳过：仅添加到空白时间段
+					for (let s=start; s<=end; s++) {
+						const k = key(day, s);
+						if (!data[k]) {
+							data[k] = { text: infoInput.value.trim(), day, slot: s };
+						}
+					}
+					save();
+					renderGrid();
+				});
+			} else {
+				// No conflicts, add directly
+				for (let s=start; s<=end; s++) {
+					const k = key(day, s);
+					data[k] = { text: infoInput.value.trim(), day, slot: s };
+				}
+				save();
+				renderGrid();
+			}
+		}
+
+		function deleteSelected() {
+			selected.forEach(k => { delete data[k]; });
+			clearSelection();
+			save();
+			renderGrid();
+		}
+
+		function clearAll() {
+			if (!confirm('确认清空全部课程？')) return;
+			data = {};
+			save();
+			renderGrid();
+		}
+
+		function save() {
+			localStorage.setItem('timetable-data', JSON.stringify(data));
+		}
+
+		function load() {
+			try {
+				const v = localStorage.getItem('timetable-data');
+				if (v) data = JSON.parse(v) || {};
+			} catch(e) { data = {}; }
+		}
+
+		function escapeHtml(str) {
+			return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+		}
+
+		function showConflictDialog(conflicts, onOverwrite, onSkip) {
+			const modal = document.createElement('div');
+			modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+			
+			const box = document.createElement('div');
+			box.style.cssText = 'background:#fff;border-radius:12px;padding:24px;min-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.3);';
+			
+			const title = document.createElement('h3');
+			title.textContent = '课程冲突';
+			title.style.cssText = 'margin:0 0 12px 0;color:#e74c3c;font-size:18px;';
+			
+			const message = document.createElement('p');
+			message.textContent = `以下时间段已有课程：第 ${conflicts.join(', ')} 节`;
+			message.style.cssText = 'margin:0 0 20px 0;color:#333;line-height:1.6;';
+			
+			const btnContainer = document.createElement('div');
+			btnContainer.style.cssText = 'display:flex;gap:12px;justify-content:flex-end;';
+			
+			const overwriteBtn = document.createElement('button');
+			overwriteBtn.textContent = '覆盖';
+			overwriteBtn.style.cssText = 'padding:8px 20px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;';
+			overwriteBtn.onclick = () => { document.body.removeChild(modal); onOverwrite(); };
+			
+			const skipBtn = document.createElement('button');
+			skipBtn.textContent = '跳过';
+			skipBtn.style.cssText = 'padding:8px 20px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;';
+			skipBtn.onclick = () => { document.body.removeChild(modal); onSkip(); };
+			
+			btnContainer.appendChild(overwriteBtn);
+			btnContainer.appendChild(skipBtn);
+			
+			box.appendChild(title);
+			box.appendChild(message);
+			box.appendChild(btnContainer);
+			modal.appendChild(box);
+			
+			document.body.appendChild(modal);
+		}
+
+		function editTimeSlot(cell, slot) {
+			if (editingTimeCell) return;
+			editingTimeCell = cell;
+			cell.classList.add('editing');
+			
+			const input = document.createElement('textarea');
+			input.className = 'time-edit-input';
+			input.value = slot.label;
+			input.rows = 2;
+			input.style.resize = 'none';
+			
+			cell.textContent = '';
+			cell.appendChild(input);
+			input.focus();
+			input.select();
+			
+			const finishEdit = () => {
+				const newLabel = input.value.trim();
+				if (newLabel) {
+					slot.label = newLabel;
+					saveTimeSlots();
+				}
+				cell.classList.remove('editing');
+				cell.textContent = slot.label;
+				editingTimeCell = null;
+			};
+			
+			input.addEventListener('blur', finishEdit);
+			input.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					finishEdit();
+				} else if (e.key === 'Escape') {
+					cell.classList.remove('editing');
+					cell.textContent = slot.label;
+					editingTimeCell = null;
+				}
+			});
+		}
+
+		function saveTimeSlots() {
+			localStorage.setItem('timetable-slots', JSON.stringify(slots));
+		}
+
+		function loadTimeSlots() {
+			try {
+				const saved = localStorage.getItem('timetable-slots');
+				if (saved) {
+					slots = JSON.parse(saved);
+				}
+			} catch(e) {
+				slots = JSON.parse(JSON.stringify(defaultSlots));
+			}
+		}
+
+		function restoreTimeSlots() {
+			if (!confirm('确认恢复时间为默认设置？')) return;
+			slots = JSON.parse(JSON.stringify(defaultSlots));
+			localStorage.removeItem('timetable-slots');
+			renderGrid();
+		}
+
+		function updateFormFromSelection(day, slot) {
+			const selectedDay = day;
+			const slotsForDay = Array.from(selected)
+				.map(k => k.split('-').map(Number))
+				.filter(([d]) => d === selectedDay)
+				.map(([,s]) => s);
+			if (slotsForDay.length === 0) {
+				daySelect.value = String(day);
+				startSlot.value = String(slot);
+				endSlot.value = String(slot);
+				return;
+			}
+			const minS = Math.min(...slotsForDay);
+			const maxS = Math.max(...slotsForDay);
+			daySelect.value = String(day);
+			startSlot.value = String(minS);
+			endSlot.value = String(maxS);
+		}
+
+		// Init
+		initSelects();
+		loadTimeSlots();
+		load();
+		renderGrid();
+
+		applyBtn.addEventListener('click', addOrUpdate);
+		deleteBtn.addEventListener('click', deleteSelected);
+		clearBtn.addEventListener('click', clearAll);
+		document.getElementById('restoreBtn').addEventListener('click', restoreTimeSlots);
+	</script>
+</body>
+</html>

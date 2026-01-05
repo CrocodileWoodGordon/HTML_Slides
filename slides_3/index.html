@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT 转 HTML · 通用演示方案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: radial-gradient(circle at 15% 20%, rgba(0, 215, 255, 0.12), transparent 45%),
+                        radial-gradient(circle at 80% 0%, rgba(120, 96, 255, 0.14), transparent 50%),
+                        linear-gradient(135deg, #040611 0%, #090f1f 45%, #101a33 100%);
+            color: #ecf5ff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40vh;
+            right: -30vw;
+            width: 70vw;
+            height: 70vw;
+            background: radial-gradient(circle, rgba(53, 224, 194, 0.25), transparent 60%);
+            filter: blur(20px);
+            opacity: 0.6;
+            animation: pulseAura 8s ease-in-out infinite;
+        }
+
+        @keyframes pulseAura {
+            0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.45; }
+            50% { transform: scale(1.08) translate(-10px, 18px); opacity: 0.7; }
+        }
+
+        .floating-orb {
+            position: fixed;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 65%);
+            mix-blend-mode: screen;
+            z-index: 0;
+            animation: floatOrb 12s ease-in-out infinite;
+        }
+
+        .floating-orb:nth-child(1) { top: 10%; left: 8%; animation-delay: -2s; }
+        .floating-orb:nth-child(2) { bottom: 12%; right: 6%; animation-delay: 1.5s; }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.4; }
+            50% { transform: translate3d(30px, -20px, 0) scale(1.1); opacity: 0.7; }
+        }
+
+        .page {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: translateX(40px) scale(0.97);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            padding: 60px 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+            z-index: 2;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .page.slide-in-from-right { animation: slideInFromRight 0.6s ease forwards; }
+        .page.slide-in-from-left { animation: slideInFromLeft 0.6s ease forwards; }
+        .page.slide-out-to-left { animation: slideOutToLeft 0.6s ease forwards; z-index: 1; }
+        .page.slide-out-to-right { animation: slideOutToRight 0.6s ease forwards; z-index: 1; }
+
+        @keyframes slideInFromRight {
+            0% { opacity: 0; transform: translateX(80px) scale(0.98); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes slideInFromLeft {
+            0% { opacity: 0; transform: translateX(-80px) scale(0.98); }
+            100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        @keyframes slideOutToLeft {
+            0% { opacity: 1; transform: translateX(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-80px) scale(0.95); }
+        }
+
+        @keyframes slideOutToRight {
+            0% { opacity: 1; transform: translateX(0) scale(1); }
+            100% { opacity: 0; transform: translateX(80px) scale(0.95); }
+        }
+
+        .page-content {
+            max-width: 1380px;
+            width: 94%;
+            background: rgba(9, 17, 34, 0.68);
+            border: 1px solid rgba(120, 206, 255, 0.18);
+            border-radius: 18px;
+            box-shadow: 0 25px 60px rgba(5, 10, 20, 0.55);
+            padding: 72px 88px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+        }
+
+        .page-content::before {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: 16px;
+            border: 1px solid rgba(53, 224, 194, 0.18);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        .page.active .page-content::before {
+            opacity: 1;
+        }
+
+        .page-content h1,
+        .page-content h2,
+        .page-content h3 {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .headline {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #50e6ff, #7dfdff, #a5b0ff);
+            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 24px;
+            color: #9bc7ff;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            color: #7fc4ff;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 38px;
+            margin-bottom: 24px;
+            color: #f1f7ff;
+        }
+
+        .content-layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .content-layout.column {
+            flex-direction: column;
+        }
+
+        .content-list {
+            flex: 1.8;
+            list-style: none;
+            font-size: 22px;
+            line-height: 1.8;
+            color: #dbe9ff;
+        }
+
+        .content-list li {
+            position: relative;
+            padding-left: 32px;
+            margin-bottom: 18px;
+        }
+
+        .content-list li::before {
+            content: attr(data-index);
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, rgba(53, 224, 194, 0.25), rgba(109, 135, 255, 0.25));
+            border: 1px solid rgba(130, 220, 255, 0.4);
+            box-shadow: 0 0 15px rgba(90, 210, 255, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #bdeaff;
+        }
+
+        .content-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid rgba(120, 160, 255, 0.18);
+            box-shadow: inset 0 0 30px rgba(76, 125, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(90, 180, 255, 0.3), transparent 55%);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .content-pills {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pill {
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(53, 224, 194, 0.08);
+            border: 1px solid rgba(53, 224, 194, 0.3);
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            color: #c9f9ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(120, 220, 255, 0.8);
+            box-shadow: 0 0 12px rgba(120, 220, 255, 0.8);
+        }
+
+        .glow-divider {
+            margin: 32px 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(120, 220, 255, 0.5), transparent);
+        }
+
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 26px;
+        }
+
+        .timeline-step {
+            padding: 24px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(53, 224, 194, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-step:hover {
+            transform: translateY(-6px);
+        }
+
+        .timeline-step span {
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #7bcaff;
+            text-transform: uppercase;
+        }
+
+        .timeline-step h3 {
+            font-size: 24px;
+            margin: 12px 0 10px;
+        }
+
+        .timeline-step p {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #d8eaff;
+        }
+
+        .chart-wrap {
+            display: grid;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar span {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(53, 224, 194, 0.7), rgba(139, 123, 255, 0.7));
+            border-radius: 999px;
+            box-shadow: 0 0 18px rgba(120, 200, 255, 0.65);
+            animation: pulseBar 6s ease-in-out infinite;
+        }
+
+        @keyframes pulseBar {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(40deg); }
+        }
+
+        .quote-box {
+            font-size: 22px;
+            line-height: 1.8;
+            color: #f0f6ff;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 28px 30px;
+            border: 1px solid rgba(139, 123, 255, 0.25);
+            box-shadow: inset 0 0 25px rgba(139, 123, 255, 0.18);
+        }
+
+        .quote-box strong {
+            color: #9ed8ff;
+        }
+
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 240px;
+            height: 100vh;
+            background: rgba(6, 10, 24, 0.88);
+            border-right: 1px solid rgba(80, 120, 255, 0.2);
+            padding: 40px 28px;
+            z-index: 5;
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            backdrop-filter: blur(12px);
+        }
+
+        #sidebar.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        #sidebar h3 {
+            font-size: 21px;
+            color: #80e8ff;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        #sidebar ul {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        #sidebar li {
+            cursor: pointer;
+            color: #cddcff;
+            font-size: 16px;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 10px;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        #sidebar li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(120, 220, 255, 0.6);
+            transform: translateY(-50%);
+        }
+
+        #sidebar li:hover {
+            color: #86ecff;
+            transform: translateX(4px);
+        }
+
+        #sidebar li.indent-1 { margin-left: 10px; }
+        #sidebar li.indent-2 { margin-left: 20px; }
+
+        #nav-arrows {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 6;
+            display: flex;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #nav-arrows.show {
+            opacity: 1;
+        }
+
+        .arrow-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(7, 12, 24, 0.55);
+            color: #f3fbff;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .arrow-btn:hover {
+            transform: translateY(-3px);
+            border-color: rgba(120, 220, 255, 0.8);
+            background: rgba(16, 28, 60, 0.7);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 22px;
+            right: 26px;
+            z-index: 10;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(6, 14, 32, 0.6);
+            text-decoration: none;
+            color: #e5f4ff;
+            font-size: 15px;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(30, 70, 130, 0.65);
+            transform: translateY(-2px);
+        }
+
+        .tagline {
+            font-size: 22px;
+            text-align: center;
+            color: #a7d9ff;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 26px;
+        }
+
+        .stat-card {
+            padding: 22px;
+            border-radius: 16px;
+            background: rgba(8, 20, 42, 0.75);
+            border: 1px solid rgba(88, 112, 255, 0.22);
+            box-shadow: inset 0 0 18px rgba(88, 112, 255, 0.18);
+        }
+
+        .stat-card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: #a8d8ff;
+        }
+
+        .stat-card p {
+            font-size: 16px;
+            color: #dfe9ff;
+            line-height: 1.7;
+        }
+
+        .callout {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            padding: 20px;
+            border-radius: 14px;
+            background: rgba(53, 224, 194, 0.08);
+            border: 1px solid rgba(53, 224, 194, 0.32);
+            color: #d0fdf7;
+            font-size: 19px;
+        }
+
+        .callout strong { color: #92ffe9; }
+
+        @media (max-width: 960px) {
+            .page-content {
+                padding: 52px 38px;
+            }
+            .content-layout {
+                flex-direction: column;
+            }
+            #sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-orb"></div>
+    <div class="floating-orb"></div>
+
+    <div id="sidebar">
+        <h3>演讲目录</h3>
+        <ul>
+            <li data-page="1">封面 · PPT 转 HTML</li>
+            <li class="indent-1" data-page="2">01 传统演示的痛点</li>
+            <li class="indent-1" data-page="3">02 兼容性风险图谱</li>
+            <li class="indent-1" data-page="4">03 HTML 演示的价值</li>
+            <li class="indent-1" data-page="5">04 技术路线概览</li>
+            <li class="indent-1" data-page="6">05 关键实现要素</li>
+            <li class="indent-1" data-page="7">06 动效与交互设计</li>
+            <li class="indent-1" data-page="8">07 稳定性与维护</li>
+            <li class="indent-1" data-page="9">08 通用场景案例</li>
+            <li class="indent-1" data-page="10">09 行动计划</li>
+            <li class="indent-1" data-page="11">结语 · 谢谢大家</li>
+        </ul>
+    </div>
+
+    <a href="../index.html" class="back-button">← 返回 index.html</a>
+
+    <div id="nav-arrows">
+        <button id="arrow-left" class="arrow-btn" aria-label="上一页">&larr;</button>
+        <button id="arrow-right" class="arrow-btn" aria-label="下一页">&rarr;</button>
+    </div>
+
+    <div class="page active" id="page1">
+        <div class="page-content">
+            <div class="tagline">HTML SLIDES ANYWHERE</div>
+            <h1 class="headline">让 PPT 化身网页演示 · 设备随时可播</h1>
+            <div class="subtitle">一次制作 · 所有终端一致呈现</div>
+            <div class="meta">
+                <span>主讲：顾诚</span>
+                <span>单位：计算机科学与技术学院</span>
+                <span>时间：2025 年 12 月 30 日</span>
+            </div>
+            <div class="quote-box">
+                “演示文稿不应该被播放器限制。HTML 化的方案，让内容脱离软件束缚，在任何浏览器中保持统一体验。”
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page2">
+        <div class="page-content">
+            <h2 class="section-title">01 传统演示的痛点</h2>
+            <div class="content-layout">
+                <ul class="content-list">
+                    <li data-index="01">临场风险：字体缺失、动画错位、视频无法播放，导致演示中断。</li>
+                    <li data-index="02">准备繁琐：为不同设备准备多个版本，事前测试耗时耗力。</li>
+                    <li data-index="03">分享受限：演示后若想分发，需要安装软件或导出 PDF，交互性全失。</li>
+                </ul>
+                <div class="content-card">
+                    <h3>我们真正想要的</h3>
+                    <p>内容一次编辑、随时打开、体验一致，且易于团队协作与版本迭代。</p>
+                    <div class="content-pills">
+                        <div class="pill">跨平台一致</div>
+                        <div class="pill">轻量分发</div>
+                        <div class="pill">维护简洁</div>
+                        <div class="pill">数据可控</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page3">
+        <div class="page-content">
+            <h2 class="section-title">02 兼容性风险图谱</h2>
+            <div class="two-column">
+                <div class="stat-card">
+                    <h3>播放器差异</h3>
+                    <p>Office、WPS、不同时期 PowerPoint 的解析存在细节差异，动画脚本与嵌入对象最易失效。</p>
+                    <div class="glow-divider"></div>
+                    <div class="callout"><strong>后果：</strong>现场演示不稳定，需要额外演练和兜底方案。</div>
+                </div>
+                <div class="stat-card">
+                    <h3>硬件与分辨率</h3>
+                    <p>会议室大屏、笔记本、平板展示尺寸不同，PPT 布局常出现拉伸或元素溢出。</p>
+                    <div class="glow-divider"></div>
+                    <div class="callout"><strong>症结：</strong>缺乏响应式渲染能力，缺少自动适配规则。</div>
+                </div>
+            </div>
+            <div class="glow-divider"></div>
+            <div class="chart-wrap">
+                <div>
+                    <span>环境差异引发调试时间</span>
+                    <div class="progress-bar"><span style="width: 65%;"></span></div>
+                </div>
+                <div>
+                    <span>临场效果受设备影响的概率</span>
+                    <div class="progress-bar"><span style="width: 72%;"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page4">
+        <div class="page-content">
+            <h2 class="section-title">03 HTML 演示的价值</h2>
+            <div class="content-layout">
+                <ul class="content-list">
+                    <li data-index="A">浏览器即播放器：无需安装额外软件，Windows、macOS、Linux、移动端均可播放。</li>
+                    <li data-index="B">视觉一致：通过 CSS 控制字体、版式与主题色，确保设计语言原样呈现。</li>
+                    <li data-index="C">轻松分发：静态文件即可部署至任意服务器或网盘，扫码即可观看。</li>
+                    <li data-index="D">交互增强：可插入代码高亮、图表、表单、媒体播放器，实现更灵活的演示体验。</li>
+                </ul>
+                <div class="content-card">
+                    <h3>一句话总结</h3>
+                    <p>“让演示回归网页的开放生态，把兼容性变成理所当然。”</p>
+                    <div class="content-pills">
+                        <div class="pill">标准化</div>
+                        <div class="pill">可访问</div>
+                        <div class="pill">可扩展</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page5">
+        <div class="page-content">
+            <h2 class="section-title">04 技术路线概览</h2>
+            <div class="timeline">
+                <div class="timeline-step">
+                    <span>STEP 01</span>
+                    <h3>结构抽取</h3>
+                    <p>梳理 PPT 的章节、标题、文本、媒体资源，形成可描述的数据结构。</p>
+                </div>
+                <div class="timeline-step">
+                    <span>STEP 02</span>
+                    <h3>模板设计</h3>
+                    <p>基于 HTML5 + CSS3 + JS 设计主题模板，封装目录、翻页、过渡动画组件。</p>
+                </div>
+                <div class="timeline-step">
+                    <span>STEP 03</span>
+                    <h3>内容渲染</h3>
+                    <p>通过脚本或自定义工具，将结构化数据渲染为 HTML 页面，实现半自动化更新。</p>
+                </div>
+                <div class="timeline-step">
+                    <span>STEP 04</span>
+                    <h3>发布与测试</h3>
+                    <p>部署到静态托管平台或企业服务器，结合自动化测试验证多终端显示效果。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page6">
+        <div class="page-content">
+            <h2 class="section-title">05 关键实现要素</h2>
+            <div class="content-layout">
+                <div class="content-card" style="flex:1.2;">
+                    <h3>技术亮点</h3>
+                    <ul class="content-list" style="font-size:20px;">
+                        <li data-index="1">语义化结构：使用 section、article 等标签，提升可维护性与可扩展性。</li>
+                        <li data-index="2">资源托管：字体、图片、视频统一走 CDN 或对象存储，保证加载稳定。</li>
+                        <li data-index="3">渐进增强：核心内容先行加载，高阶动效按需启用，兼顾性能与体验。</li>
+                    </ul>
+                </div>
+                <div class="content-card">
+                    <h3>协作机制</h3>
+                    <div class="content-pills">
+                        <div class="pill">版本控制</div>
+                        <div class="pill">审校流程</div>
+                        <div class="pill">自动化检查</div>
+                        <div class="pill">组件复用</div>
+                    </div>
+                    <div class="glow-divider"></div>
+                    <p style="font-size:17px;line-height:1.8;color:#d9e8ff;">结合 CI/CD 检查链接可用性、资源体积与加载速度，保障每次发布的稳定性。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page7">
+        <div class="page-content">
+            <h2 class="section-title">06 动效与交互设计</h2>
+            <div class="two-column">
+                <div class="stat-card">
+                    <h3>视觉节奏</h3>
+                    <p>利用 CSS transform 与 transition 组织渐显、缩放、视差效果，强化信息层次。</p>
+                </div>
+                <div class="stat-card">
+                    <h3>交互元素</h3>
+                    <p>整合导航目录、键盘翻页、半屏点击翻页及悬停动画，让操作方式贴近线下演示。</p>
+                </div>
+            </div>
+            <div class="glow-divider"></div>
+            <div class="callout"><strong>原则：</strong>动效为内容服务，节奏与信息密度匹配，保障观众的关注焦点。</div>
+        </div>
+    </div>
+
+    <div class="page" id="page8">
+        <div class="page-content">
+            <h2 class="section-title">07 稳定性与维护</h2>
+            <div class="content-layout column">
+                <div class="content-card" style="background:rgba(255,255,255,0.06);">
+                    <h3>多端体验矩阵</h3>
+                    <div class="content-pills">
+                        <div class="pill">桌面浏览器</div>
+                        <div class="pill">会议室大屏</div>
+                        <div class="pill">平板与手机</div>
+                        <div class="pill">嵌入式终端</div>
+                    </div>
+                </div>
+                <ul class="content-list" style="font-size:21px;">
+                    <li data-index="A">响应式布局：使用 flex 与 grid，自动适配不同分辨率与屏幕比例。</li>
+                    <li data-index="B">离线兜底：Service Worker 缓存关键资源，低网络环境也能顺利播放。</li>
+                    <li data-index="C">安全可控：可接入权限校验、水印与访问统计，满足企业级使用需求。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page9">
+        <div class="page-content">
+            <h2 class="section-title">08 通用场景案例</h2>
+            <div class="content-layout">
+                <div class="content-card" style="flex:1.4;">
+                    <h3>典型应用</h3>
+                    <ul class="content-list" style="font-size:20px;">
+                        <li data-index="I">科技发布会：多终端同时展示，观众手机扫码即可同步观看。</li>
+                        <li data-index="II">企业培训：课程素材集中托管，员工随时在线复习。</li>
+                        <li data-index="III">产品销售：销售团队在客户现场直接打开链接，免去拷贝文件。</li>
+                    </ul>
+                </div>
+                <div class="content-card">
+                    <h3>落地反馈</h3>
+                    <div class="content-pills">
+                        <div class="pill">环境部署时间 ↓70%</div>
+                        <div class="pill">演示可用率 99%</div>
+                        <div class="pill">内容更新周期 缩短一半</div>
+                    </div>
+                    <div class="glow-divider"></div>
+                    <p style="font-size:17px;line-height:1.8;color:#dce7ff;">HTML 演示可复用模板与脚本，一次搭建后即可支持多场景复用。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page10">
+        <div class="page-content">
+            <h2 class="section-title">09 行动计划</h2>
+            <div class="content-layout">
+                <ul class="content-list">
+                    <li data-index="01">组建演示模板小组，一周内完成核心组件和主题样式沉淀。</li>
+                    <li data-index="02">挑选三套现有 PPT，试点脚本化转换流程，收集反馈迭代工具。</li>
+                    <li data-index="03">建立静态托管与监控方案，确保访问速度与可用性。</li>
+                    <li data-index="04">在公司或学院范围推广，形成“PPT → HTML”标准流程。</li>
+                </ul>
+                <div class="quote-box" style="flex:1;">
+                    <strong>目标：</strong>让所有演示需求都拥有即插即用的网页化版本，真正做到随时抵达、随时更新。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page11">
+        <div class="page-content" style="text-align:center;">
+            <div class="tagline">THANK YOU</div>
+            <h2 class="headline" style="font-size:58px;">谢谢大家</h2>
+            <p style="font-size:22px;color:#b8dcff;margin-top:26px;">期待与各位继续交流“PPT → HTML”演示的实践经验与最佳方案。</p>
+            <div style="margin-top:40px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
+                <div class="pill" style="font-size:16px;">欢迎现场提问</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pages = Array.from(document.querySelectorAll('.page'));
+        const totalPages = pages.length;
+        const animationClasses = ['slide-in-from-right', 'slide-in-from-left', 'slide-out-to-left', 'slide-out-to-right'];
+        let currentPage = 1;
+        let mouseTimer = null;
+        let isAnimating = false;
+
+        function clearAnimations(element) {
+            if (!element) return;
+            animationClasses.forEach(cls => element.classList.remove(cls));
+        }
+
+        function goToPage(pageNum) {
+            if (pageNum < 1 || pageNum > totalPages || pageNum === currentPage || isAnimating) {
+                return;
+            }
+
+            const newPage = document.getElementById('page' + pageNum);
+            const oldPage = document.getElementById('page' + currentPage);
+            if (!newPage) return;
+
+            const direction = pageNum > currentPage ? 'next' : 'prev';
+            const enteringClass = direction === 'next' ? 'slide-in-from-right' : 'slide-in-from-left';
+            const exitingClass = direction === 'next' ? 'slide-out-to-left' : 'slide-out-to-right';
+
+            clearAnimations(newPage);
+            if (oldPage) {
+                clearAnimations(oldPage);
+            }
+
+            isAnimating = true;
+            let remaining = oldPage ? 2 : 1;
+
+            const handleEnterEnd = (event) => {
+                if (event.target !== newPage) return;
+                newPage.removeEventListener('animationend', handleEnterEnd);
+                newPage.classList.remove(enteringClass);
+                if (--remaining === 0) {
+                    isAnimating = false;
+                }
+            };
+
+            const handleExitEnd = (event) => {
+                if (!oldPage || event.target !== oldPage) return;
+                oldPage.removeEventListener('animationend', handleExitEnd);
+                oldPage.classList.remove('active');
+                oldPage.classList.remove(exitingClass);
+                if (--remaining === 0) {
+                    isAnimating = false;
+                }
+            };
+
+            newPage.classList.add('active');
+            newPage.addEventListener('animationend', handleEnterEnd);
+            if (oldPage) {
+                oldPage.addEventListener('animationend', handleExitEnd);
+            }
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    newPage.classList.add(enteringClass);
+                    if (oldPage) {
+                        oldPage.classList.add(exitingClass);
+                    }
+                });
+            });
+
+            currentPage = pageNum;
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const navArrows = document.getElementById('nav-arrows');
+
+            if (sidebar && e.clientX < 220) {
+                sidebar.classList.add('show');
+            } else if (sidebar) {
+                sidebar.classList.remove('show');
+            }
+
+            if (navArrows) {
+                navArrows.classList.add('show');
+                clearTimeout(mouseTimer);
+                mouseTimer = setTimeout(() => {
+                    navArrows.classList.remove('show');
+                }, 1800);
+            }
+        });
+
+        document.querySelectorAll('#sidebar li').forEach(item => {
+            item.addEventListener('click', () => {
+                const pageNum = parseInt(item.getAttribute('data-page'), 10);
+                goToPage(pageNum);
+            });
+        });
+
+        document.getElementById('arrow-left').addEventListener('click', () => {
+            goToPage(currentPage - 1);
+        });
+
+        document.getElementById('arrow-right').addEventListener('click', () => {
+            goToPage(currentPage + 1);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                goToPage(currentPage - 1);
+            } else if (e.key === 'ArrowRight') {
+                goToPage(currentPage + 1);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#sidebar') || e.target.closest('#nav-arrows') || e.target.closest('.back-button')) {
+                return;
+            }
+            if (e.clientX < window.innerWidth / 2) {
+                goToPage(currentPage - 1);
+            } else {
+                goToPage(currentPage + 1);
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小挑战杯选题推荐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* 页面容器 */
+        .page {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .page.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        /* 博客风格的中心内容块 */
+        .page-content {
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 60px 80px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            position: relative;
+            min-height: 500px;
+        }
+
+        /* 页面1：标题页 */
+        #page1 .page-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        #page1 .main-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 60px;
+        }
+
+        #page1 .author {
+            font-size: 16px;
+            margin-top: 40px;
+        }
+
+        /* 页面2：主标题 */
+        #page2 .title-area {
+            margin-bottom: 40px;
+        }
+
+        #page2 .title-line1,
+        #page2 .title-line2 {
+            font-size: 28px;
+        }
+
+        #page2 .title-line2 {
+            margin-top: 10px;
+        }
+
+        /* 页面11：选题二标题与页面2一致的字号与间距 */
+        #page11 .title-line1,
+        #page11 .title-line2 {
+            font-size: 28px;
+        }
+
+        #page11 .title-line2 {
+            margin-top: 10px;
+        }
+
+        #page2 .content-wrapper {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        #page2 .content-text {
+            flex: 2;
+            font-size: 18px;
+            line-height: 1.8;
+        }
+
+        #page2 .illustration {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 通用子章节样式 */
+        .subsection-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            margin-top: 0;
+        }
+
+        /* 确保相同indent的页面小标题位于同一位置 */
+        .page-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .content-points {
+            flex: 2;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .content-points li {
+            margin-bottom: 15px;
+            list-style: none;
+        }
+
+        .content-points li::before {
+            content: attr(data-num) ". ";
+            color: #fff;
+        }
+
+        .side-illustration {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bottom-illustration {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .center-illustration {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .illustration svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .highlight-red {
+            color: #ffaaaa;
+        }
+
+        .highlight-blue {
+            color: #aaccff;
+        }
+
+        /* 侧边栏目录 */
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 200px;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        #sidebar.show {
+            opacity: 1;
+        }
+
+        #sidebar ul {
+            list-style: none;
+        }
+
+        #sidebar li {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        #sidebar li:hover {
+            color: #aaccff;
+        }
+
+        #sidebar li.indent-1 {
+            margin-left: 10px;
+        }
+
+        #sidebar li.indent-2 {
+            margin-left: 20px;
+        }
+
+        /* 导航箭头 - 只保留左右箭头 */
+        #nav-arrows {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            gap: 10px;
+        }
+
+        #nav-arrows.show {
+            opacity: 1;
+        }
+
+        .arrow-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid #fff;
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            border-radius: 4px;
+        }
+
+        .arrow-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 返回索引按钮 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 150;
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* SVG 图形样式 */
+        svg text {
+            fill: #fff;
+            font-size: 14px;
+        }
+
+        svg line, svg polyline, svg rect, svg circle, svg path {
+            stroke: #fff;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        svg rect.filled {
+            fill: rgba(255, 255, 255, 0.1);
+        }
+
+        svg .highlight-red {
+            stroke: #ffaaaa;
+            fill: #ffaaaa;
+        }
+
+        svg .highlight-blue {
+            stroke: #aaccff;
+            fill: #aaccff;
+        }
+
+        /* 具体举例页面样式 */
+        .example-description {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .images-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .image-container {
+            position: relative;
+            width: 280px;
+            height: 200px;
+            overflow: visible; /* let inner scroller handle overflow */
+            border-radius: 8px;
+            transition: transform 0.4s ease;
+            cursor: pointer;
+            border: 3px solid #fff;
+            flex-shrink: 0;
+        }
+
+        .image-container.correct {
+            border-color: #4ade80;
+        }
+
+        .image-container.incorrect {
+            border-color: #ff6b6b;
+        }
+
+        .image-container.thinking {
+            border-color: #cd853f;
+        }
+
+        .image-container:hover {
+            transform: scale(2.5);
+            z-index: 50;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+            /* scrolling is handled by .image-scroll */
+        }
+
+        /* 内部滚动容器与滚动条样式 */
+        .image-scroll {
+            height: 100%;
+            overflow: hidden; /* default: no scroll until hover */
+        }
+
+        .image-container:hover .image-scroll {
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* 自定义滚动条样式 */
+        .image-container:hover .image-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .image-container:hover .image-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .image-container:hover .image-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+        }
+
+        .image-container:hover .image-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            z-index: 10;
+            pointer-events: none; /* keep label fixed and non-interactive */
+        }
+
+        .image-container.correct .image-label {
+            background-color: rgba(74, 222, 128, 0.8);
+        }
+
+        .image-container.incorrect .image-label {
+            background-color: rgba(255, 107, 107, 0.8);
+        }
+
+        .image-container.thinking .image-label {
+            background-color: rgba(205, 133, 63, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 侧边栏目录 -->
+<div id="sidebar">
+    <ul>
+        <li data-page="1">小挑战杯选题推荐</li>
+        <li data-page="2" class="indent-1">1 选题推荐一：OJ与人工智能的结合</li>
+        <li data-page="3" class="indent-2">└─1.1 前景提要：AI泛性的利弊</li>
+        <li data-page="4" class="indent-2">└─1.2 具体举例：大模型在算法题上的表现</li>
+        <li data-page="5" class="indent-2">└─1.3 传统题目-题解式训练的核心弊端</li>
+        <li data-page="6" class="indent-2">└─1.4 核心创新：AI对单题的提前深度思考</li>
+        <li data-page="7" class="indent-2">└─1.5 待解决的关键问题：提升大模型的深度思考能力</li>
+        <li data-page="8" class="indent-2">└─1.6 延伸价值：AI驱动的个性化学习指导</li>
+        <li data-page="9" class="indent-2">└─1.7 场景适配：贴合ACM选手的深度需求</li>
+        <li data-page="10" class="indent-2">└─1.8 赛道定位：创新+创业双重价值</li>
+        <li data-page="11">选题推荐二：云端HTML演示文稿</li>
+        <li data-page="12" class="indent-1">2 方案概述：跨平台、免安装、可部署</li>
+        <li data-page="13" class="indent-2">└─2.1 核心功能：演示引擎与交互</li>
+        <li data-page="14" class="indent-2">└─2.2 技术栈与兼容性</li>
+        <li data-page="15" class="indent-2">└─2.3 部署与使用</li>
+        <li data-page="16" class="indent-2">└─2.4 价值与拓展</li>
+    </ul>
+</div>
+
+<!-- 返回到索引页按钮 -->
+<a href="index.html" class="back-button" title="返回目录">返回目录</a>
+
+<!-- 页面11：选题2 - 主标题与简介 -->
+<div class="page" id="page11">
+    <div class="page-content">
+        <div class="title-area" style="margin-bottom: 20px;">
+            <div class="title-line1">选题推荐二：</div>
+            <div class="title-line2">云端HTML演示文稿——跨平台、免安装、可部署</div>
+        </div>
+        <div class="content-layout" style="align-items:center;">
+            <div class="content-points">
+                <ul>
+                    <li data-num="1">痛点解决：避免PPT版本差异导致的不兼容与丢字形变；</li>
+                    <li data-num="2">云端访问：部署到任意Web服务器或静态托管平台，随时可看；</li>
+                    <li data-num="3">交互增强：支持鼠标、键盘、触控、媒体与自定义动画；</li>
+                    <li data-num="4">复用性强：同一套HTML/CSS/JS模板，快速生成不同演示；</li>
+                </ul>
+            </div>
+            <div class="illustration">
+                <svg width="320" height="240" viewBox="0 0 320 240">
+                    <rect x="20" y="30" width="120" height="80" rx="6"/>
+                    <text x="80" y="75" text-anchor="middle" font-size="12">浏览器</text>
+                    <line x1="140" y1="70" x2="180" y2="70" stroke-dasharray="5,5"/>
+                    <rect x="180" y="30" width="120" height="80" rx="6" class="filled"/>
+                    <text x="240" y="75" text-anchor="middle" font-size="12">云端托管</text>
+                    <text x="160" y="150" text-anchor="middle" font-size="14" class="highlight-blue">HTML 演示系统</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面12：2 - 方案概述：跨平台、免安装、可部署 -->
+<div class="page" id="page12">
+    <div class="page-content">
+        <div class="subsection-title">方案概述：跨平台、免安装、可部署</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">跨平台：任意设备（Windows/macOS/Linux/iOS/Android）只需浏览器即可播放；</li>
+                <li data-num="2">免安装：无需本地PPT/字体环境，避免版本冲突与兼容问题；</li>
+                <li data-num="3">可部署：支持GitHub Pages、Vercel、Netlify、Nginx/Apache等；</li>
+                <li data-num="4">扩展友好：可插入SVG图形、Canvas动画、视频/音频、交互脚本；</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="280" height="220" viewBox="0 0 280 220">
+                    <rect x="20" y="40" width="80" height="50" rx="6" class="filled"/>
+                    <text x="60" y="65" text-anchor="middle" font-size="11">PC</text>
+                    <rect x="110" y="40" width="80" height="50" rx="6" class="filled"/>
+                    <text x="150" y="65" text-anchor="middle" font-size="11">Mobile</text>
+                    <rect x="200" y="40" width="60" height="50" rx="6" class="filled"/>
+                    <text x="230" y="65" text-anchor="middle" font-size="11">Tablet</text>
+                    <line x1="140" y1="100" x2="140" y2="160"/>
+                    <rect x="90" y="160" width="100" height="40" rx="6" class="highlight-blue filled"/>
+                    <text x="140" y="185" text-anchor="middle" font-size="11">Browser</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- 页面13：2.1 - 核心功能：演示引擎与交互 -->
+<div class="page" id="page13">
+    <div class="page-content">
+        <div class="subsection-title">核心功能：演示引擎与交互</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">页面切换：侧边目录、键盘左右键、点击左右半屏、导航箭头；</li>
+                <li data-num="2">版式组件：标题区、内容区、SVG示意、图片网格、对话/流程图；</li>
+                <li data-num="3">媒体支持：图片缩放与滚动、音视频嵌入、代码高亮（可拓展）；</li>
+                <li data-num="4">动画与交互：CSS 过渡、hover 效果、可扩展的JS交互逻辑；</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="320" height="240" viewBox="0 0 320 240">
+                    <rect x="30" y="30" width="100" height="60" rx="6"/>
+                    <text x="80" y="65" text-anchor="middle" font-size="11">Slide</text>
+                    <rect x="190" y="30" width="100" height="60" rx="6"/>
+                    <text x="240" y="65" text-anchor="middle" font-size="11">Slide</text>
+                    <line x1="130" y1="60" x2="190" y2="60" stroke-dasharray="5,5"/>
+                    <text x="160" y="100" text-anchor="middle" font-size="12" class="highlight-blue">Interactions</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- 页面14：2.2 - 技术栈与兼容性 -->
+<div class="page" id="page14">
+    <div class="page-content">
+        <div class="subsection-title">技术栈与兼容性</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">技术栈：HTML5 + CSS3 + 原生 JavaScript；</li>
+                <li data-num="2">兼容性：Chrome/Edge/Firefox/Safari 主流浏览器；</li>
+                <li data-num="3">字体与美观：采用系统字体或云端字体，避免本地缺失；</li>
+                <li data-num="4">模块化：内容区组件化，便于复用与维护；</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="300" height="220" viewBox="0 0 300 220">
+                    <rect x="30" y="40" width="80" height="40" rx="6" class="filled"/>
+                    <text x="70" y="65" text-anchor="middle" font-size="11">HTML</text>
+                    <rect x="120" y="40" width="80" height="40" rx="6" class="filled"/>
+                    <text x="160" y="65" text-anchor="middle" font-size="11">CSS</text>
+                    <rect x="210" y="40" width="60" height="40" rx="6" class="filled"/>
+                    <text x="240" y="65" text-anchor="middle" font-size="11">JS</text>
+                    <text x="150" y="140" text-anchor="middle" font-size="12" class="highlight-blue">现代浏览器兼容</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- 页面15：2.3 - 部署与使用 -->
+<div class="page" id="page15">
+    <div class="page-content">
+        <div class="subsection-title">部署与使用</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">快速部署：将项目推送到GitHub，开启Pages即可访问；</li>
+                <li data-num="2">自托管：Nginx/Apache 配置静态站点，绑定域名；</li>
+                <li data-num="3">更新维护：只需提交HTML/CSS/JS改动，立即生效；</li>
+                <li data-num="4">团队协作：多人协作与版本控制，支持Review/回滚；</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="320" height="220" viewBox="0 0 320 220">
+                    <rect x="40" y="40" width="100" height="40" rx="6" class="filled"/>
+                    <text x="90" y="65" text-anchor="middle" font-size="11">GitHub Pages</text>
+                    <rect x="180" y="40" width="100" height="40" rx="6" class="filled"/>
+                    <text x="230" y="65" text-anchor="middle" font-size="11">Nginx</text>
+                    <line x1="140" y1="60" x2="180" y2="60" stroke-dasharray="5,5"/>
+                    <text x="160" y="140" text-anchor="middle" font-size="12" class="highlight-blue">一键上线</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- 页面16：2.4 - 价值与拓展 -->
+<div class="page" id="page16">
+    <div class="page-content">
+        <div class="subsection-title">价值与拓展</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">展示价值：更稳定的跨平台演示效果，随时分享链接即可呈现；</li>
+                <li data-num="2">教学场景：课程讲义、项目路演、技术培训均可复用模板；</li>
+                <li data-num="3">互动拓展：可接入实时互动（投票/问答/表单），增强参与感；</li>
+                <li data-num="4">品牌统一：统一样式与资产管理，保证视觉一致性；</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="320" height="220" viewBox="0 0 320 220">
+                    <rect x="40" y="40" width="240" height="80" rx="6" class="filled"/>
+                    <text x="160" y="85" text-anchor="middle" font-size="12">统一模板与风格</text>
+                    <text x="160" y="150" text-anchor="middle" font-size="12" class="highlight-blue">可扩展交互</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- 导航箭头 - 只显示左右箭头 -->
+<div id="nav-arrows">
+    <button class="arrow-btn" id="arrow-left">←</button>
+    <button class="arrow-btn" id="arrow-right">→</button>
+</div>
+
+<!-- 页面1：标题页 -->
+<div class="page active" id="page1">
+    <div class="page-content">
+        <div class="main-title">小挑战杯选题推荐</div>
+        <div class="author">演讲者：顾诚</div>
+    </div>
+</div>
+
+<!-- 页面2：1 - 选题推荐主标题 -->
+<div class="page" id="page2">
+    <div class="page-content">
+        <div class="title-area">
+            <div class="title-line1">选题推荐一：</div>
+            <div class="title-line2">OJ与人工智能的结合--AI+教育在OI领域的实践</div>
+        </div>
+        <div class="content-wrapper">
+            <div class="content-text">
+                本选题聚焦OI/ACM竞赛场景下，将人工智能深度融入OJ（在线判题）平台，解决传统OJ仅提供题目-题解、AI答疑浮于表面的核心痛点，探索AI从"泛化解答"到"精准到题、深度思考"的落地路径，兼具创新赛道（AI算法创新）与创业赛道（OJ平台商业化）的双重价值。
+            </div>
+            <div class="illustration">
+                <svg width="300" height="300" viewBox="0 0 300 300">
+                    <!-- OJ平台界面 -->
+                    <rect x="20" y="20" width="120" height="150" rx="5"/>
+                    <line x1="30" y1="40" x2="130" y2="40"/>
+                    <line x1="30" y1="60" x2="110" y2="60"/>
+                    <line x1="30" y1="80" x2="120" y2="80"/>
+                    <line x1="30" y1="100" x2="100" y2="100"/>
+                    <!-- AI大脑 -->
+                    <circle cx="220" cy="95" r="60"/>
+                    <circle cx="200" cy="80" r="8"/>
+                    <circle cx="240" cy="80" r="8"/>
+                    <circle cx="210" cy="110" r="6"/>
+                    <circle cx="230" cy="110" r="6"/>
+                    <!-- 连接线 -->
+                    <line x1="140" y1="95" x2="160" y2="95" stroke-dasharray="5,5"/>
+                    <text x="100" y="220" text-anchor="middle" font-size="16">OJ + AI</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面3：1.1 - 前景提要：AI泛性的利弊 -->
+<div class="page" id="page3">
+    <div class="page-content">
+        <div class="subsection-title">前景提要：AI泛性的利弊</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">现状：当前通用大模型（如GPT、Claude）在OI领域呈现"泛而不精"的特征——能解答基础算法问题，但缺乏对特定题型、冷门算法的深度理解；</li>
+                <li data-num="2">优势：泛性AI降低了OI入门门槛，能快速回应基础疑问；</li>
+                <li data-num="3">弊端：面对复杂算法（如吉司机线段树）、非标准解法时，易出现"答非所问""误判思路"等问题，无法匹配OI/ACM选手的深度需求。</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="280" height="300" viewBox="0 0 280 300">
+                    <!-- 左侧：泛性AI -->
+                    <rect x="10" y="50" width="100" height="80" rx="5"/>
+                    <text x="60" y="75" text-anchor="middle" font-size="12">泛性AI</text>
+                    <text x="60" y="95" text-anchor="middle" font-size="12">解答</text>
+                    <text x="60" y="115" text-anchor="middle" font-size="10" opacity="0.6">(模糊)</text>
+                    <!-- 右侧：深度需求 -->
+                    <rect x="170" y="50" width="100" height="80" rx="5" class="highlight-red"/>
+                    <text x="220" y="75" text-anchor="middle" font-size="12">深度需求</text>
+                    <text x="220" y="95" text-anchor="middle" font-size="10">吉司机线段树</text>
+                    <text x="220" y="110" text-anchor="middle" font-size="10">矩阵重载</text>
+                    <!-- VS -->
+                    <text x="140" y="95" text-anchor="middle" font-size="20">VS</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面4：1.2 - 具体举例：大模型在算法题上的表现 -->
+<div class="page" id="page4">
+    <div class="page-content">
+        <div class="subsection-title">具体举例：大模型在算法题上的表现</div>
+        <div class="example-description">
+            <strong>测试题目：</strong>THUPC2023初赛 - 众数<br>
+            <strong>题目简述：</strong>对于给定的一些元素构造一个排列使其所有从1到i的子序列的众数之和最大<br>
+            <strong>核心考点：</strong>简单贪心<br>
+			我的程序用了不同于官方题解的贪心思路，并且犯了一个小错。而当我试图通过大模型找出错误时……<br>
+            以下是9个主流大模型对该题的回答表现：
+        </div>
+        <div class="images-grid">
+            <div class="image-container correct">
+                <div class="image-scroll"><img src="result_gemini3pro.png" alt="Gemini 3 Pro"></div>
+                <div class="image-label">gemini3pro ✓</div>
+            </div>
+            <div class="image-container incorrect">
+                <div class="image-scroll"><img src="result_claudeSonnet4.5.png" alt="Claude Sonnet 4.5"></div>
+                <div class="image-label">claudeSonnet4.5 ✗</div>
+            </div>
+            <div class="image-container incorrect">
+                <div class="image-scroll"><img src="result_gpt5.0.png" alt="GPT 5.0"></div>
+                <div class="image-label">gpt5.0 ✗</div>
+            </div>
+            <div class="image-container incorrect">
+                <div class="image-scroll"><img src="result_doubao_seed_code_preview_251028.png" alt="Doubao Seed Code Preview"></div>
+                <div class="image-label">doubao_seed_code_preview_251028 ✗</div>
+            </div>
+            <div class="image-container incorrect">
+                <div class="image-scroll"><img src="result_grok4.1beta.png" alt="Grok 4.1 Beta"></div>
+                <div class="image-label">grok4.1beta ✗</div>
+            </div>
+            <div class="image-container incorrect">
+                <div class="image-scroll"><img src="result_qwen3coder.png" alt="Qwen 3 Coder"></div>
+                <div class="image-label">qwen3coder ✗</div>
+            </div>
+            <div class="image-container thinking">
+                <div class="image-scroll"><img src="result_gpt5.1codex.png" alt="GPT 5.1 Codex"></div>
+                <div class="image-label">gpt5.1codex ⏳</div>
+            </div>
+            <div class="image-container thinking">
+                <div class="image-scroll"><img src="result_qwen3max.png" alt="Qwen 3 Max"></div>
+                <div class="image-label">qwen3max ⏳</div>
+            </div>
+            <div class="image-container thinking">
+                <div class="image-scroll"><img src="result_deepseek_V3.2_cc.png" alt="DeepSeek V3.2 CC"></div>
+                <div class="image-label">deepseek_V3.2_cc ⏳</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面5：1.3 - 传统题目-题解式训练的核心弊端 -->
+<div class="page" id="page5">
+    <div class="page-content">
+        <div class="subsection-title">传统题目-题解式训练的核心弊端</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">学习壁垒高：仅提供标准化题解，无分层讲解，新手看不懂题解时无有效引导，陷入"卡题-放弃"循环；</li>
+                <li data-num="2">AI答疑失效：现有AI基于题解库泛化解答，无法精准定位用户"看不懂的点"，甚至误判用户的非标准正确思路；</li>
+                <li data-num="3">缺乏个性化：题解是静态、统一的，无法适配不同基础（入门/进阶/竞赛）选手的理解节奏。</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="280" height="420" viewBox="0 0 280 420">
+                    <!-- 流程图 -->
+                    <rect x="90" y="20" width="100" height="40" rx="10" class="filled"/>
+                    <text x="140" y="45" text-anchor="middle">卡题</text>
+                    <line x1="140" y1="60" x2="140" y2="90" marker-end="url(#arrowhead)"/>
+
+                    <rect x="90" y="90" width="100" height="40" rx="10" class="filled"/>
+                    <text x="140" y="115" text-anchor="middle">看题解</text>
+                    <line x1="140" y1="130" x2="140" y2="160" marker-end="url(#arrowhead)"/>
+
+                    <rect x="90" y="160" width="100" height="40" rx="10" class="filled highlight-red"/>
+                    <text x="140" y="185" text-anchor="middle">看不懂</text>
+                    <line x1="140" y1="200" x2="140" y2="230" marker-end="url(#arrowhead)"/>
+
+                    <rect x="90" y="230" width="100" height="40" rx="10" class="filled"/>
+                    <text x="140" y="255" text-anchor="middle">问AI</text>
+                    <line x1="140" y1="270" x2="140" y2="300" marker-end="url(#arrowhead)"/>
+
+                    <rect x="70" y="300" width="140" height="40" rx="10" class="filled highlight-red"/>
+                    <text x="140" y="325" text-anchor="middle">AI答非所问</text>
+                    <line x1="140" y1="340" x2="140" y2="370" marker-end="url(#arrowhead)"/>
+
+                    <rect x="90" y="370" width="100" height="40" rx="10" class="filled highlight-red"/>
+                    <text x="140" y="395" text-anchor="middle">放弃</text>
+
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                            <polygon points="0 0, 10 5, 0 10" fill="#fff"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面6：1.4 - 核心创新：AI对单题的提前深度思考 -->
+<div class="page" id="page6">
+    <div class="page-content">
+        <div class="subsection-title">核心创新：AI对单题的提前深度思考</div>
+        <ul class="content-points" style="max-width: 100%;">
+            <li data-num="1">定义：针对OJ每道题，预先完成"全链路拆解+多思路探索+错误预判"，而非实时零散推导；</li>
+            <li data-num="2">解决的核心问题：用户卡题/提问时，AI能快速定位问题核心（如思路正确但笔误、不理解某步算法逻辑），而非泛泛而谈；</li>
+            <li data-num="3">落地路径：人机协同——人类提供基础题解框架，AI自主扩展多解法/错误模式，人工审核优化。</li>
+        </ul>
+        <div class="center-illustration">
+            <svg width="100%" height="250" viewBox="0 0 700 250">
+                <!-- 左侧：传统AI -->
+                <text x="100" y="30" text-anchor="middle" font-size="16" font-weight="bold">传统AI</text>
+                <rect x="20" y="50" width="160" height="40" rx="5" class="filled"/>
+                <text x="100" y="75" text-anchor="middle" font-size="14">实时推导</text>
+                <line x1="100" y1="90" x2="100" y2="120"/>
+                <rect x="20" y="120" width="160" height="40" rx="5" class="filled"/>
+                <text x="100" y="145" text-anchor="middle" font-size="14">碎片化解答</text>
+
+                <!-- 右侧：深度思考AI -->
+                <text x="520" y="30" text-anchor="middle" font-size="16" font-weight="bold" class="highlight-blue">深度思考AI</text>
+                <rect x="440" y="50" width="160" height="40" rx="5" class="filled highlight-blue"/>
+                <text x="520" y="75" text-anchor="middle" font-size="14">预存全链路</text>
+                <line x1="520" y1="90" x2="520" y2="120"/>
+                <rect x="440" y="120" width="160" height="40" rx="5" class="filled highlight-blue"/>
+                <text x="520" y="145" text-anchor="middle" font-size="14">精准解答</text>
+
+                <!-- 树状分支 -->
+                <line x1="520" y1="160" x2="380" y2="200"/>
+                <line x1="520" y1="160" x2="460" y2="200"/>
+                <line x1="520" y1="160" x2="540" y2="200"/>
+                <line x1="520" y1="160" x2="620" y2="200"/>
+                <text x="380" y="220" text-anchor="middle" font-size="12">考点</text>
+                <text x="460" y="220" text-anchor="middle" font-size="12">思路</text>
+                <text x="540" y="220" text-anchor="middle" font-size="12">错误</text>
+                <text x="620" y="220" text-anchor="middle" font-size="12">拓展</text>
+
+                <!-- 对比箭头 -->
+                <line x1="200" y1="110" x2="420" y2="110" stroke-dasharray="5,5"/>
+                <text x="310" y="105" text-anchor="middle" font-size="16">→</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 页面7：1.5 - 待解决的关键问题：提升大模型的深度思考能力 -->
+<div class="page" id="page7">
+    <div class="page-content">
+        <div class="subsection-title">待解决的关键问题：提升大模型的深度思考能力</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">创新思路挖掘：引导AI发现非标准解法（如吉司机线段树的矩阵重载视角），而非仅匹配官方题解；</li>
+                <li data-num="2">思路容错识别：区分"思路正确但笔误"与"思路错误"，避免误判用户的创新解法；</li>
+                <li data-num="3">知识关联能力：建立算法知识点的跨域关联（如线段树+线性代数），支撑深度答疑。</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="350" height="350" viewBox="0 0 350 350">
+                    <!-- 中心节点 -->
+                    <circle cx="175" cy="175" r="50" class="filled"/>
+                    <text x="175" y="170" text-anchor="middle" font-size="14">核心问题</text>
+                    <text x="175" y="188" text-anchor="middle" font-size="12">深度思考能力</text>
+
+                    <!-- 分支1 -->
+                    <line x1="175" y1="125" x2="175" y2="50"/>
+                    <circle cx="175" cy="50" r="5" fill="#fff"/>
+                    <text x="175" y="30" text-anchor="middle" font-size="12" font-weight="bold">创新思路挖掘</text>
+                    <text x="175" y="15" text-anchor="middle" font-size="10">(非标准解法)</text>
+
+                    <!-- 分支2 -->
+                    <line x1="218" y1="204" x2="290" y2="280"/>
+                    <circle cx="290" cy="280" r="5" fill="#fff"/>
+                    <text x="290" y="300" text-anchor="middle" font-size="12" font-weight="bold">思路容错识别</text>
+                    <text x="290" y="315" text-anchor="middle" font-size="10">(区分笔误/错误)</text>
+
+                    <!-- 分支3 -->
+                    <line x1="132" y1="204" x2="60" y2="280"/>
+                    <circle cx="60" cy="280" r="5" fill="#fff"/>
+                    <text x="60" y="300" text-anchor="middle" font-size="12" font-weight="bold">知识关联能力</text>
+                    <text x="60" y="315" text-anchor="middle" font-size="10">(跨域关联)</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面8：1.6 - 延伸价值：AI驱动的个性化学习指导 -->
+<div class="page" id="page8">
+    <div class="page-content">
+        <div class="subsection-title">延伸价值：AI驱动的个性化学习指导</div>
+        <div class="center-illustration">
+            <svg width="100%" height="400" viewBox="0 0 900 400">
+                <!-- 时间轴主线 -->
+                <line x1="50" y1="200" x2="850" y2="200" stroke-width="3"/>
+
+                <!-- 基础阶段 -->
+                <circle cx="200" cy="200" r="8" fill="#aaccff"/>
+                <line x1="200" y1="200" x2="200" y2="140"/>
+                <rect x="120" y="60" width="160" height="70" rx="5" class="filled highlight-blue"/>
+                <text x="200" y="85" text-anchor="middle" font-size="14" font-weight="bold">基础阶段</text>
+                <text x="200" y="105" text-anchor="middle" font-size="11">基础算法训练</text>
+                <text x="200" y="120" text-anchor="middle" font-size="11">每日5题</text>
+                <text x="200" y="250" text-anchor="middle" font-size="12">学习计划定制：根据当前进度生成适配计划</text>
+
+                <!-- 进阶阶段 -->
+                <circle cx="450" cy="200" r="8" fill="#aaccff"/>
+                <line x1="450" y1="200" x2="450" y2="140"/>
+                <rect x="370" y="60" width="160" height="70" rx="5" class="filled highlight-blue"/>
+                <text x="450" y="85" text-anchor="middle" font-size="14" font-weight="bold">进阶阶段</text>
+                <text x="450" y="105" text-anchor="middle" font-size="11">高级数据结构</text>
+                <text x="450" y="120" text-anchor="middle" font-size="11">每日3题+复习</text>
+                <text x="450" y="250" text-anchor="middle" font-size="12">题目智能推送：新题学习+旧题复习组合</text>
+
+                <!-- 竞赛阶段 -->
+                <circle cx="700" cy="200" r="8" fill="#aaccff"/>
+                <line x1="700" y1="200" x2="700" y2="140"/>
+                <rect x="620" y="60" width="160" height="70" rx="5" class="filled highlight-blue"/>
+                <text x="700" y="85" text-anchor="middle" font-size="14" font-weight="bold">竞赛阶段</text>
+                <text x="700" y="105" text-anchor="middle" font-size="11">模拟赛训练</text>
+                <text x="700" y="120" text-anchor="middle" font-size="11">针对性突破</text>
+                <text x="700" y="250" text-anchor="middle" font-size="12">错题闭环优化：针对性推荐同类题巩固</text>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 页面9：1.7 - 场景适配：贴合ACM选手的深度需求 -->
+<div class="page" id="page9">
+    <div class="page-content">
+        <div class="subsection-title">场景适配：贴合ACM选手的深度需求</div>
+        <ul class="content-points" style="max-width: 100%;">
+            <li data-num="1">竞赛导向：ACM竞赛侧重算法创新、边界条件处理、高效调试，AI深度思考能精准匹配"非标准解法验证""冷门算法答疑""快速定位代码笔误"等核心需求；</li>
+            <li data-num="2">团队实践优势：小组核心成员均为ACM选手，能精准挖掘赛道痛点，验证AI功能的实用性，避免"纸上谈兵"；</li>
+            <li data-num="3">落地可行性：基于ACM训练经验，能快速构建高质量的"算法深度思考知识库"（如竞赛高频题、易错点）。</li>
+        </ul>
+        <div class="bottom-illustration">
+            <svg width="700" height="200" viewBox="0 0 700 200">
+                <!-- 选手 -->
+                <circle cx="150" cy="80" r="25"/>
+                <line x1="150" y1="105" x2="150" y2="160"/>
+                <line x1="150" y1="120" x2="120" y2="145"/>
+                <line x1="150" y1="120" x2="180" y2="145"/>
+
+                <!-- 电脑屏幕 -->
+                <rect x="250" y="40" width="200" height="130" rx="5"/>
+                <line x1="250" y1="65" x2="450" y2="65"/>
+                <text x="350" y="90" text-anchor="middle" font-size="12">OJ题目</text>
+                <text x="280" y="110" text-anchor="start" font-size="10">算法：动态规划</text>
+                <text x="280" y="130" text-anchor="start" font-size="10">难度：★★★</text>
+                <text x="280" y="150" text-anchor="start" font-size="10">提交：1234次</text>
+
+                <!-- AI提示框 -->
+                <rect x="480" y="50" width="180" height="110" rx="5" class="filled highlight-blue"/>
+                <text x="570" y="75" text-anchor="middle" font-size="11" font-weight="bold">AI深度答疑</text>
+                <text x="570" y="95" text-anchor="middle" font-size="9">✓ 非标准解法验证</text>
+                <text x="570" y="110" text-anchor="middle" font-size="9">✓ 冷门算法讲解</text>
+                <text x="570" y="125" text-anchor="middle" font-size="9">✓ 代码笔误定位</text>
+                <text x="570" y="140" text-anchor="middle" font-size="9">✓ 思路优化建议</text>
+
+                <!-- 连接线 -->
+                <line x1="180" y1="120" x2="250" y2="105" stroke-dasharray="3,3"/>
+                <line x1="450" y1="105" x2="480" y2="105" stroke-dasharray="3,3"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- 页面10：1.8 - 赛道定位：创新+创业双重价值 -->
+<div class="page" id="page10">
+    <div class="page-content">
+        <div class="subsection-title">赛道定位：创新+创业双重价值</div>
+        <div class="content-layout">
+            <ul class="content-points">
+                <li data-num="1">创新赛道：核心创新点为"AI单题级深度思考机制"，突破现有OJ+AI的泛化瓶颈，属于AI+教育领域的技术创新；</li>
+                <li data-num="2">创业赛道：可落地为类似洛谷的OJ平台，主打"AI深度答疑+个性化竞赛训练"，精准切中OI/ACM选手的付费需求（如定制计划、1v1 AI答疑）；</li>
+                <li data-num="3">市场潜力：OI/ACM选手群体付费意愿高，现有平台缺乏深度AI功能，存在明显的市场空白。</li>
+            </ul>
+            <div class="side-illustration">
+                <svg width="400" height="350" viewBox="0 0 400 350">
+                    <text x="200" y="30" text-anchor="middle" font-size="18" font-weight="bold">商业画布</text>
+
+                    <!-- 核心资源 -->
+                    <rect x="20" y="60" width="160" height="80" rx="5" class="filled"/>
+                    <text x="100" y="85" text-anchor="middle" font-size="13" font-weight="bold">核心资源</text>
+                    <text x="100" y="105" text-anchor="middle" font-size="11">AI深度思考</text>
+                    <text x="100" y="120" text-anchor="middle" font-size="11">知识库</text>
+
+                    <!-- 目标用户 -->
+                    <rect x="220" y="60" width="160" height="80" rx="5" class="filled"/>
+                    <text x="300" y="85" text-anchor="middle" font-size="13" font-weight="bold">目标用户</text>
+                    <text x="300" y="105" text-anchor="middle" font-size="11">OI/ACM</text>
+                    <text x="300" y="120" text-anchor="middle" font-size="11">选手群体</text>
+
+                    <!-- 价值主张 -->
+                    <rect x="120" y="160" width="160" height="80" rx="5" class="filled highlight-blue"/>
+                    <text x="200" y="185" text-anchor="middle" font-size="13" font-weight="bold">价值主张</text>
+                    <text x="200" y="205" text-anchor="middle" font-size="10">精准到题深度答疑</text>
+                    <text x="200" y="220" text-anchor="middle" font-size="10">个性化学习指导</text>
+
+                    <!-- 盈利模式 -->
+                    <rect x="20" y="260" width="160" height="80" rx="5" class="filled"/>
+                    <text x="100" y="285" text-anchor="middle" font-size="13" font-weight="bold">盈利模式</text>
+                    <text x="100" y="305" text-anchor="middle" font-size="11">会员制</text>
+                    <text x="100" y="320" text-anchor="middle" font-size="11">付费AI答疑</text>
+
+                    <!-- 市场潜力 -->
+                    <rect x="220" y="260" width="160" height="80" rx="5" class="filled highlight-red"/>
+                    <text x="300" y="285" text-anchor="middle" font-size="13" font-weight="bold">市场潜力</text>
+                    <text x="300" y="305" text-anchor="middle" font-size="11">高付费意愿</text>
+                    <text x="300" y="320" text-anchor="middle" font-size="11">市场空白</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const totalPages = 16;
+    let mouseTimer = null;
+
+    // 页面切换
+    function goToPage(pageNum) {
+        if (pageNum < 1 || pageNum > totalPages) return;
+
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+
+        document.getElementById('page' + pageNum).classList.add('active');
+        currentPage = pageNum;
+    }
+
+    // 侧边栏显示/隐藏
+    document.addEventListener('mousemove', (e) => {
+        const sidebar = document.getElementById('sidebar');
+        const navArrows = document.getElementById('nav-arrows');
+
+        if (e.clientX < 200) {
+            sidebar.classList.add('show');
+        } else {
+            sidebar.classList.remove('show');
+        }
+
+        // 显示导航箭头
+        navArrows.classList.add('show');
+
+        // 清除之前的定时器
+        clearTimeout(mouseTimer);
+
+        // 设置新的定时器，2秒后隐藏箭头
+        mouseTimer = setTimeout(() => {
+            navArrows.classList.remove('show');
+        }, 2000);
+    });
+
+    // 目录点击事件
+    document.querySelectorAll('#sidebar li').forEach(item => {
+        item.addEventListener('click', () => {
+            const pageNum = parseInt(item.getAttribute('data-page'));
+            goToPage(pageNum);
+        });
+    });
+
+    // 箭头按钮事件 - 只保留左右箭头
+    document.getElementById('arrow-left').addEventListener('click', () => {
+        goToPage(currentPage - 1);
+    });
+
+    document.getElementById('arrow-right').addEventListener('click', () => {
+        goToPage(currentPage + 1);
+    });
+
+    // 键盘事件 - 只响应左右键
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+            goToPage(currentPage - 1);
+        } else if (e.key === 'ArrowRight') {
+            goToPage(currentPage + 1);
+        }
+    });
+
+    // 点击页面切换
+    document.addEventListener('click', (e) => {
+        // 避免点击侧边栏和箭头时触发
+        if (e.target.closest('#sidebar') || e.target.closest('#nav-arrows') || e.target.closest('.back-button')) {
+            return;
+        }
+
+        // 左半屏幕上一页，右半屏幕下一页
+        if (e.clientX < window.innerWidth / 2) {
+            goToPage(currentPage - 1);
+        } else {
+            goToPage(currentPage + 1);
+        }
+    });
+</script>
+
+</body>
+</html>
